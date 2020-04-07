@@ -1,70 +1,71 @@
-// console.log('\n === index.js executed! ===\n');
-
 const express = require('express');
+const shortid = require('shortid');
+const cors = require("cors");
 
 const server = express();
-
+server.use(cors());
 let users = [
     {
-        id: 7,
-        name: 'dummy seven',
-        bio: 'dum dum dum dum dum dum dum '
-    }, 
-];
+      id: 1,
+      name: "web28",
+      bio: 'covid-19'
+    },
+  ];
 
-//middleware
+// middleware
 server.use(express.json());
 
-//endpoints
+// endpoints
 server.get('/', (req, res) => {
-    res.json({api: "running......."});
+    res.json({ api: "running..." });
 });
 
-server.get('/api/users', (req, res) => {
-    const users = [
-        {
-            id: 1,
-            name: 'dummy one',
-            bio: 'dum dum dum dum dum dum dum '
-        },
-        {
-            id: 2,
-            name: 'dummy two',
-            bio: 'dum dum dum dum dum dum dum '
-        },
-        {
-            id: 3,
-            name: 'dummy three',
-            bio: 'dum dum dum dum dum dum dum '
-        },
-        {
-            id: 4,
-            name: 'dummy four',
-            bio: 'dum dum dum dum dum dum dum '
-        },
-        {
-            id: 5,
-            name: 'dummy five',
-            bio: 'dum dum dum dum dum dum dum '
-        },
-        {
-            id: 6,
-            name: 'dummy six',
-            
-        },
-    ];
-    res.json(users);
+server.get("/api/users", (req, res) => {
+  res.status(200).json(users);
 });
 
-server.post('/api.users', (req, res) => {
-const userInfo = req.body;
-
-users.push(userInfo);
-
-res.status(201).json(users);
-
+server.get("/api/users/:id", (req, res) => {
+  const id = req.params.id;
+  const user = users.find((u) => u.id == id);
+  if (user) {
+    res.status(200).json(user);
+  } else {
+    res.status(404).json({ message: "User not found." });
+  }
 });
+
+server.post(`/api/users`, (req, res) => {
+  if (!req.body.name || !req.body.bio) {
+    res
+      .status(400)
+      .json({ errorMessage: "Please provide name and bio for the user." });
+  } else {
+    let user = {
+      id: shortid.generate(),
+      ...req.body,
+    };
+
+    if (users.find((el) => el.id === user.id)) {
+      res
+        .status(500)
+        .json({
+          errorMessage:
+            "There was an error while saving the user to the database",
+        });
+    } else {
+      users.push(user);
+      res.status(201).json(users);
+    }
+  }
+});
+
+server.delete("/api/users/:id", (req, res) => {
+  const deleted = users.find((user) => user.id === req.params.id);
+  users = users.filter((user) => user.id !== req.params.id);
+
+  res.send(deleted);
+});
+
 
 const port = 5000;
-
-server.listen(port, () => console.log(`\n === api on port ${port} ===\n`));
+server.listen(port, () => console.log(`api on port ${port}`));
